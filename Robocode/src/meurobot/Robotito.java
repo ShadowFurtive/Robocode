@@ -1,4 +1,5 @@
 package meurobot;
+import java.awt.Color;
 import robocode.*;
 import robocode.util.Utils;
 /**
@@ -8,19 +9,27 @@ import robocode.util.Utils;
 public class Robotito extends AdvancedRobot {
     
     boolean direccio = false; //false = der , true = izq
-    boolean hitwall = false;
-    
+    boolean forwardmove = true;
+    boolean nearfocus = false;
+    boolean zonaperill;
     public void run(){
         /*
         * Fem un scaneig a tot arreu fins trobar a l'enemic.
         * 1)Amb getRadarTurnRemaining() veiem el comportament del radar(volem movement)
         *   la funcio retorna double: (<-)-1; (quiet) 0; (->)1
         */
-        setAdjustGunForRobotTurn(false);
-        setAdjustRadarForRobotTurn(false);
-        setAdjustRadarForGunTurn(false);
-       
-
+        setAdjustGunForRobotTurn(true);
+        setAdjustRadarForRobotTurn(true);
+        setAdjustRadarForGunTurn(true);
+        setBodyColor(new Color(255, 0, 0));
+        if (getX() <= 50 || getY() <= 50 || getBattleFieldWidth() - getX() <= 50 || getBattleFieldHeight() - getY() <= 50) {
+				zonaperill = true;
+			} else {
+			zonaperill = false;
+		}
+           setAhead(40000);
+           forwardmove = true;
+           
         while(true){
             if(getRadarTurnRemaining()== 0.0){
                 setTurnRadarRightRadians(Double.POSITIVE_INFINITY);
@@ -28,12 +37,16 @@ public class Robotito extends AdvancedRobot {
            
             //scan();
             
-                  
-            if(nearWall()){
-                setBack(80);
-                waitFor(new MoveCompleteCondition(this));
-            }
-       
+            System.out.println("111111");
+                if (getX() > 50 && getY() > 50 && getBattleFieldWidth() - getX() > 50 && getBattleFieldHeight() - getY() > 50 && zonaperill == true) {
+                        zonaperill = false;
+                }
+                if (getX() <= 50 || getY() <= 50 || getBattleFieldWidth() - getX() <= 50 || getBattleFieldHeight() - getY() <= 50 ) {
+                        if ( zonaperill == false){
+                                ChangeDirection();
+                                zonaperill = true;
+                        }
+                }
             
             execute();  
         }
@@ -49,7 +62,7 @@ public class Robotito extends AdvancedRobot {
         //Tots els angles les normalitzem
         
         //Ara angle sera el angle absolut fins a l'enemic
-        
+        System.out.println("aa");
             double angle = getHeadingRadians() + e.getBearingRadians();
             //angleRadar sera el requerido para girar hacia el enemigo
             double angleRadar = Utils.normalRelativeAngle(angle - getRadarHeadingRadians());
@@ -71,49 +84,30 @@ public class Robotito extends AdvancedRobot {
 
             
             
-            setTurnGunRightRadians(angleGun);
-            if(e.getDistance()>40){
-                GoToEnemy(e.getDistance(),Utils.normalRelativeAngle(angle - getHeadingRadians()));
+            setTurnGunRightRadians(angleGun); 
+            if(e.getDistance()<60){
+                System.out.println("AAAAAAAAAAAAAAAAAAAAAAAAAAA");
+                turnRight(e.getBearing()+180);
+                ahead(100);
+                //waitFor(new MoveCompleteCondition(this));
+            }else{
+                if(e.getDistance()>160){
+                    System.out.println("NEEEEAR");
+                    nearfocus = false;
+                }
+                if(e.getDistance()>40 && !nearfocus){
+                    GoToEnemy(e.getDistance(),Utils.normalRelativeAngle(angle - getHeadingRadians()));
+                }
+                if(e.getDistance()<200 && e.getDistance()>100 && nearfocus){
+                    RotateAround((e.getBearing()));
+                }
             }
-            if(e.getDistance()<200 && e.getDistance()>150){
-                RotateAround(Utils.normalRelativeAngle(angle - getHeadingRadians()));
-            }
-            
-           // fire(1);
-//            setTurnRightRadians(angleGun);
-//            //if((e.getEnergy()<getEnergy())){
-//                if(e.getDistance()<20){
-//                   setTurnRightDegrees(e.getBearing());
-//                   setAhead(e.getDistance());
-//                }else{
-//                    double angleZigZag;
-//    
-//                    double distZigZag;
-//                    if(!(direccio)){
-//                        angleZigZag = e.getBearing() + 45;
-//                        distZigZag =50;
-//                        setTurnRightDegrees(angleZigZag);
-//                        if(nearWall()){
-//                           setBack(distZigZag); 
-//                        }else{
-//                            setAhead(distZigZag);
-//                        }
-//                        direccio = true;
-//                    }else{
-//                        angleZigZag = e.getBearing() + 45;
-//                        distZigZag = 50;
-//                        setTurnLeftDegrees(angleZigZag);
-//                        if(nearWall()){
-//                           setBack(distZigZag); 
-//                        }else{
-//                            setAhead(distZigZag);
-//                        }
-//                  
-//                        direccio = false;
-//                    }
-//                    
-//                }
-                    
+       if(getEnergy()>50 && e.getDistance()<160){
+           fire(1);
+       }else{
+           
+       }
+
         
     }
     public void GoToEnemy(double dist,double bear){
@@ -122,27 +116,67 @@ public class Robotito extends AdvancedRobot {
 //        }else{
 //            setTurnLeft(bear);
 //        }
+        System.out.println("GOING TO ENEMMMMIII");
         setTurnRightRadians(bear);
          //waitFor(new TurnCompleteCondition(this));
-        setAhead(dist-150);
-        fire(1);
+       
+            setAhead(dist - 150);
+    
+        
+        nearfocus = true;     
+
     }
     public void RotateAround(double bear){
-        
-        
+        //rotate derecha i izquierda
+//        setTurnLeftRadians(bear+ Utils.normalRelativeAngle(Math.toRadians(90)));
+//        setAhead(10);
+//        waitFor(new MoveCompleteCondition(this));
+       
+        System.out.println("FENT ROTATE");
+        aux();
+        setTurnRight(Utils.normalRelativeAngleDegrees(bear+90));
+        if(forwardmove){
+            setAhead(100);
+        }else{
+             setBack(100);
+           
+        }
     }
-    public boolean nearWall(){
-        
-        //Paret Izq
-        if(getX()<=50 || getY()<=50 || 
-           getX()>=getBattleFieldWidth()-50 || 
-           getY()>= getBattleFieldHeight()-50){
-            System.out.println("TRUEEEE");
-            return true;
-        }                            
-        System.out.println("FAALLLSEEEE");
-        return false;
-        
+    public void aux(){
+        if (getX() > 50 && getY() > 50 && getBattleFieldWidth() - getX() > 50 && getBattleFieldHeight() - getY() > 50 && zonaperill == true) {
+                        zonaperill = false;
+                }
+                if (getX() <= 50 || getY() <= 50 || getBattleFieldWidth() - getX() <= 50 || getBattleFieldHeight() - getY() <= 50 ) {
+                        if ( zonaperill == false){
+                                ChangeDirection();
+                                zonaperill = true;
+                        }
+                }
+            
     }
-    
+    public void ChangeDirection(){
+        System.out.println("CHANGEDIR");
+        if(forwardmove){
+            setBack(100);
+            forwardmove = false;
+        }else{
+            setAhead(100);
+            forwardmove = true;
+        }
+      // waitFor(new MoveCompleteCondition(this));
+       
+       
+//        forwardmove = !forwardmove;
+    }
+    public void onHitWall(HitWallEvent e) {
+		// Bounce off!
+                System.out.println("hitWALLLLL");
+		ChangeDirection();
+	}
+//   	public void onHitRobot(HitRobotEvent e) {
+//		// If we're moving the other robot, reverse!
+//		if (e.isMyFault()) {
+//			ChangeDirection();
+//		}
+//	}
 }

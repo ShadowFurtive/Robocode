@@ -17,70 +17,67 @@ public class ElRobot extends AdvancedRobot
     boolean zonaperill;
 	double lastEnemyHeading;
     public void run(){
-        /*
-        * Fem un scaneig a tot arreu fins trobar a l'enemic.
-        * 1)Amb getRadarTurnRemaining() veiem el comportament del radar(volem movement)
-        *   la funcio retorna double: (<-)-1; (quiet) 0; (->)1
-        */
         setAdjustGunForRobotTurn(true);
         setAdjustRadarForRobotTurn(true);
         setAdjustRadarForGunTurn(true);
         setBodyColor(new Color(255, 0, 0));
-        if (getX() <= 50 || getY() <= 50 || 
-                getBattleFieldWidth() - getX() <= 50 || 
-                getBattleFieldHeight() - getY() <= 50) {
-				zonaperill = true;
-			} else {
-			zonaperill = false;
-		}
-           forwardmove = true;
+        if(getX() <= 50 || getY() <= 50 || 
+            getBattleFieldWidth() - getX() <= 50 || 
+            getBattleFieldHeight() - getY() <= 50) {
+            
+            zonaperill = true;
+        }else{
+            
+            zonaperill = false;
+            
+        }
+        forwardmove = true;
            
         while(true){
-        if(getRadarTurnRemaining()== 0.0){
-            setTurnRadarRightRadians(Double.POSITIVE_INFINITY);
-        }
-           
-            //scan();
-            
+            if(getRadarTurnRemaining()== 0.0){
+                
+                setTurnRadarRightRadians(Double.POSITIVE_INFINITY);
+                
+            }
             System.out.println("111111");
             nearWall();
-            
             execute();  
         }
         
         
         
     }
-    public void onScannedRobot(ScannedRobotEvent e){
+public void onScannedRobot(ScannedRobotEvent e){
 
-        
-        //Ara angle sera el angle absolut fins a l'enemic
-        System.out.println("aa");
-        double angle = getHeadingRadians() + e.getBearingRadians();
-        //angleRadar sera el requerido para girar hacia el enemigo
-        double angleRadar = Utils.normalRelativeAngle(angle - getRadarHeadingRadians());
-        //d'aquesta manera el robot estaria girant el radar amb el centre del robot enemic com a 
-        //referencia, fem que s'adelanti una mica més cap a on s'esta anant l'enemic
 
-        double extragir = Math.atan(40/e.getDistance());//Per ampliar el tamany del radar (un extra)
+    //Ara angle sera el angle absolut fins a l'enemic
+    System.out.println("aa");
+    double angle = getHeadingRadians() + e.getBearingRadians();
+    //angleRadar sera el requerido para girar hacia el enemigo
+    double angleRadar = Utils.normalRelativeAngle(angle - getRadarHeadingRadians());
+    //d'aquesta manera el robot estaria girant el radar amb el centre del robot enemic com a 
+    //referencia, fem que s'adelanti una mica més cap a on s'esta anant l'enemic
 
-        if(angleRadar < 0 ){
-            angleRadar = angleRadar - extragir;
-        }else{
-            angleRadar = angleRadar + extragir;
-        }
-        setTurnRadarRightRadians(angleRadar);
-        /*
-        *Fem el mateix amb el gun
-        */
+    double extragir = Math.atan(40/e.getDistance());//Per ampliar el tamany del radar (un extra)
 
-        Dispara(e);
-        Moviment(e,angle);	
-		
+    if(angleRadar < 0 ){
+        angleRadar = angleRadar - extragir;
+    }else{
+        angleRadar = angleRadar + extragir;
     }
+    setTurnRadarRightRadians(angleRadar);
+    /*
+    *Fem el mateix amb el gun
+    */
+
+    Dispara(e);
+    Moviment(e,angle);
+     
+}
+
 public void Moviment(ScannedRobotEvent e,double angle){
     if(e.getDistance()<224){
-        
+       
         if(forwardmove){
             setBack(100);
         }
@@ -88,6 +85,7 @@ public void Moviment(ScannedRobotEvent e,double angle){
             setAhead(100);
         }
         fire(3);
+        
     }
     else{	
         if(e.getDistance()>425){
@@ -104,26 +102,23 @@ public void Moviment(ScannedRobotEvent e,double angle){
     }
     
 }
-    public void GoToEnemy(double dist,double bear){
+public void GoToEnemy(double dist,double bear){
 
-        System.out.println("GOING TO ENEMMMMIII");
-        setTurnRightRadians(bear);
-         //waitFor(new TurnCompleteCondition(this));
-       
-        setAhead(dist - 275);
-    
-        
-        nearfocus = true;     
+    System.out.println("GOING TO ENEMMMMIII");
+    setTurnRightRadians(bear);
 
-    }
+    setAhead(dist - 275);
+    nearfocus = true;     
+
+}
 public void Dispara(ScannedRobotEvent e){
     if(e.getVelocity()==0){
+        
         double absoluteBearing = getHeadingRadians() + e.getBearingRadians();
         setTurnGunRightRadians(robocode.util.Utils.normalRelativeAngle(absoluteBearing - getGunHeadingRadians()));
+        
     }
     else{
-
-        
         double enemyHeading = e.getHeadingRadians();
         
         double turnRatio = enemyHeading - lastEnemyHeading;
@@ -157,27 +152,30 @@ public void Dispara(ScannedRobotEvent e){
            enemyHeading = enemyHeading + turnRatio;
             
             distance = Math.sqrt((myX-futureX)*(myX-futureX) + (myY-futureY)*(myY-futureY));  
-
-//            if(futureX<18 ||
-//                futureY<18 ){
-//             
-//                break;
-//            }else if(futureX > getBattleFieldWidth()-18 ||
-//                      futureY > getBattleFieldHeight()-18){
-//                futureX = getBattleFieldWidth()-18;
-//                futureY = getBattleFieldHeight()-18;
-//                break;
-//            }
-                if(	futureX < 18.0 
-                       || futureY < 18.0
-                       || futureX > getBattleFieldWidth() - 18.0
-                       || futureY > getBattleFieldHeight() - 18.0){                      
-                            futureX = Math.min(Math.max(18.0, futureX), 
-                           getBattleFieldWidth() - 18.0);
-                        futureY = Math.min(Math.max(18.0, futureY), 
-                            getBattleFieldHeight() - 18.0);
-                        break;
-               }
+            double dist = 50;
+            if(futureX<=dist ||
+               futureY<=dist ){
+                //
+                if(futureX > getBattleFieldWidth()-dist){
+                    futureX = getBattleFieldWidth()-dist;
+                }
+                  if(futureY > getBattleFieldHeight()-dist){
+                    futureY = getBattleFieldHeight()-dist;
+                }
+                break;
+                
+            }else if(futureX > getBattleFieldWidth()-dist ||
+                     futureY > getBattleFieldHeight()-dist){
+               
+                if(futureX > getBattleFieldWidth()-dist){
+                    futureX = getBattleFieldWidth()-dist;
+                }
+                  if(futureY > getBattleFieldHeight()-dist){
+                    futureY = getBattleFieldHeight()-dist;
+                }
+                break;
+                
+            }
             time++;
             
         }
